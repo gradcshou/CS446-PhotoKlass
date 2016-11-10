@@ -1,5 +1,5 @@
 # python code to convert an mxn image to an m'xn' image
-# usage : python imToMat.py [infile] [m'] [n'] [output_file]
+# usage : python imToMat.py [infile] [m'] [n'] [output_file.txt]
 # infile is a file with all the image file names. We can get this by "ls>infile" in the dir
  
 
