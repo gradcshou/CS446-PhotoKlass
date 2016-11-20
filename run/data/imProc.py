@@ -5,6 +5,7 @@ the CiFar10 dataset.
 """
 import numpy as np
 from scipy import misc
+from scipy import ndimage
 import random as rd
 import os
 import shutil
@@ -22,21 +23,22 @@ scene_dir = ['scenic/Crispy_TrainSet','scenic/Digital_Crispy_EvalSet','scenic/Na
 img_ht = 32 # image height in pixel
 img_wid = 32 # image width in pixel
 n_way_split = 6 # 5 training batches + 1 test batch
+blur_sigma = 15 # standard deviation for gaussian filter (no filter if blur_sigma = 0)
 
-bin_dir = 'photo-klass-batches-bin' # directory that saves binary file
+bin_dir = 'photo-klass-batches-bin-sigma%d' % blur_sigma # directory that saves binary file
 
 ################## Functions #######################
 
-def imageProcess(imageFile, pixelX, pixelY):
+def imageProcess(imageFile, pixelX, pixelY, isblur):
     """
-    Convert an image to RGB value with a specific size.
+    Convert an image to RGB value with a specific size. 
+    Apply guassian filter if it is blurred image (i.e. isblur = True)
     Return a list of 1D image values
     """
     arr = misc.imread(imageFile)
-#    print(arr.shape)
+    if isblur and blur_sigma>0:
+        arr = gauss_filter(arr,blur_sigma)
     downsizedImage = misc.imresize(arr,(pixelX,pixelY))
-#    print(downsizedImage.shape)
-#    print(pixelX*pixelY*3)
     assert(downsizedImage.shape[2] == 3)
     for i in range(3):
         if i == 0:
@@ -59,6 +61,14 @@ def unif_div(pos_int, n):
         s += x
     assert (min(x_arr)>0), 'invalid output for unif_div' # sanity check, ideally it should never happen
     return x_arr
+
+def gauss_filter(RGB_img, sigma):
+    assert(RGB_img.shape[2] == 3)
+    # filter image in each color channel
+    new_RGB = np.zeros(RGB_img.shape,dtype='uint8')
+    for i in range(3):
+        new_RGB[:,:,i] = ndimage.gaussian_filter(RGB_img[:,:,i], sigma)
+    return new_RGB
         
 ################# Main Program ###################
         
@@ -77,7 +87,12 @@ for i,data_dir in enumerate(dirs):
         for k,img in enumerate(img_list):
             if not img.startswith('.'): # exclude hidden files                
                 img_path = ddir+'/'+img
-                img_data = imageProcess(img_path,img_ht,img_wid)
+                if i == 0:
+                    # blurred image
+                    img_data = imageProcess(img_path,img_ht,img_wid,isblur = True)
+                else:
+                    # crispy image
+                    img_data = imageProcess(img_path,img_ht,img_wid,isblur = False)
                 data.append([lab]+img_data)
                 print 'Finish processing image %s (%d/%d)' % (img_path,k+1,len(img_list))
     rd.shuffle(data) # random shuffle images
