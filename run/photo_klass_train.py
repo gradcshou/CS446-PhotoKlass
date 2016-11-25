@@ -24,7 +24,7 @@ tf.app.flags.DEFINE_string('train_dir', 'train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
                            
-tf.app.flags.DEFINE_integer('max_steps', 10000,
+tf.app.flags.DEFINE_integer('max_steps', 1000,
                             """Number of batches to run.""") # default: 1000000
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")

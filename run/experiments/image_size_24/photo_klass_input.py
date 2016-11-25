@@ -17,7 +17,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 # Process images of this size.
-IMAGE_SIZE = 32
+IMAGE_SIZE = 24
 
 # Global constants describing the data set.
 NUM_CLASSES = 3
