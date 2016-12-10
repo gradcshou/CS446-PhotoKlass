@@ -24,10 +24,16 @@ tf.app.flags.DEFINE_string('train_dir', 'train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
                            
-tf.app.flags.DEFINE_integer('max_steps', 1000,
+tf.app.flags.DEFINE_integer('max_steps', 100,
                             """Number of batches to run.""") # default: 1000000
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
+
+# define constants
+summary_step = 10 # period of writing summary
+save_all_checkpt = True # True: save all the checkpoints; False: only save at a maximum of 5 as default
+if save_all_checkpt:
+    n_checkpt = int(FLAGS.max_steps/summary_step)+1
 
 
 def train():
@@ -50,7 +56,10 @@ def train():
     train_op = photo_klass.train(loss, global_step)
 
     # Create a saver.
-    saver = tf.train.Saver(tf.all_variables())
+    if save_all_checkpt:
+        saver = tf.train.Saver(tf.all_variables(), max_to_keep = n_checkpt)
+    else:
+        saver = tf.train.Saver(tf.all_variables())
 
     # Build the summary operation based on the TF collection of Summaries.
     summary_op = tf.merge_all_summaries()
@@ -85,12 +94,12 @@ def train():
         print (format_str % (datetime.now(), step, loss_value,
                              examples_per_sec, sec_per_batch))
 
-      if step % 100 == 0:
+      if step % summary_step == 0 or (step + 1) == FLAGS.max_steps:
         summary_str = sess.run(summary_op)
         summary_writer.add_summary(summary_str, step)
 
       # Save the model checkpoint periodically.
-      if step % 1000 == 0 or (step + 1) == FLAGS.max_steps:
+      if step % summary_step == 0 or (step + 1) == FLAGS.max_steps:
         checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
         saver.save(sess, checkpoint_path, global_step=step)
 
